@@ -3,7 +3,6 @@ import gzip
 import shutil
 import nibabel as nib
 import numpy as np
-from fsl.wrappers import fslsplit, fslmerge
 
 
 def compress_nifti(input_nii_path, remove_original=True):
@@ -72,20 +71,6 @@ def load_nifti(path):
     return nii_img, nii_data
 
 
-def split_nifti(input_nii_path, output_dir, dim="t"):
-    """
-    Splits a 4D NIfTI file into multiple 3D NIfTI files on the time axis by default.
-    """
-    fslsplit(input_nii_path, output_dir, dim=dim)
-
-
-def merge_nifti(images_paths, output_nii_path, axis="t"):
-    """
-    Merges multiple 3D NIfTI files into a single 4D NIfTI file on the time axis.
-    """
-    fslmerge(axis, output=output_nii_path, images=images_paths)
-
-
 def estimate_volume(image, resolution=None, verbose=False):
     """
     Estimate volume of a segmentation mask in mm^3.
@@ -124,34 +109,3 @@ def estimate_volume(image, resolution=None, verbose=False):
         volume[i] = _volume
 
     return volume
-
-
-def create_3d_image_from_dti(nii_img, output_path, name, save=True):
-    """
-    Create 3d image from a diffusion tensor image.
-    Input ex: (120, 120, 28, 32, 2) -> (120, 120, 28)
-
-    By taking the mean of the first slice and the second slice of b0.
-    """
-
-    # Get the data from the NIfTI image
-    nii_data = nii_img.get_fdata()
-    # Take the mean of the first slice (b0) and the second slice (b1) of the 4th dimension
-
-    if len(nii_data.shape) == 4:
-        bo_t0 = nii_data[:, :, :, 0]
-        b0_t1 = nii_data[:, :, :, 1]
-
-    else:
-        bo_t0 = nii_data[:, :, :, 0, 0]
-        b0_t1 = nii_data[:, :, :, 0, 1]
-
-    anat_data = np.mean([bo_t0, b0_t1], axis=0)
-    # Create a new NIfTI image with the anatomical data
-    anat_img = nib.Nifti1Image(anat_data, nii_img.affine, nii_img.header)
-
-    # Save the new NIfTI image
-    if save:
-        nib.save(anat_img, os.path.join(output_path, f"{name}.nii.gz"))
-
-    return anat_img

@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from ipywidgets import interact
 import numpy as np
-import SimpleITK as sitk
 import seaborn as sns
 import plotly.graph_objects as go
 
